@@ -39,7 +39,7 @@ def addImage( imageURL ):
   with Image.open('00000001.jpg') as im:
     width, height = im.size
     ratio = width/height
-    
+
     data = [{'width':640, 'height':640/ratio},{'width':1280, 'height':1280/ratio}]
     params = {'file': open("00000001.jpg", "rb"), 'sizes': json.dumps(data) }
     datagen, headers = multipart_encode(params)
@@ -71,10 +71,10 @@ def addProduct( displayName, productCode, itemCode, imageURL, sourcePage, Tags )
       tagId = {}
       tagId['id'] = foundTag
       tagsToAdd.append(tagId)
-  print tagsToAdd;  
+  print tagsToAdd;
   url = baseServer + 'products/'
   data = {'displayName' : displayName,'itemCode':itemCode, 'sourceURL':sourcePage , 'productCode'  : productCode, 'BrandId': 1, 'ImageId': imageId, 'Tags': tagsToAdd }
-  
+
   headers = {'content-type': 'application/json'}
   request = urllib2.Request(url, data = json.dumps(data), headers = headers)
 
@@ -83,10 +83,12 @@ def addProduct( displayName, productCode, itemCode, imageURL, sourcePage, Tags )
   print '---------------'
 
 
-start = 120
+start = 1920
 while True:
   req = urllib2.Request('http://www.adidas.com/us/search?sz=120&start='+(str(start))+'&fdid=STORIES&format=ajax', headers={'User-Agent':"Magic Browser"})
+
   start = start + 120;
+
   response = urllib2.urlopen(req)
   content = response.read()
   structured_page = BeautifulSoup(content)
@@ -94,8 +96,10 @@ while True:
   #find all objects
   items = structured_page.find_all("div", class_="innercard")
   print 'total products: ' + str(len(items))
+  counter = 0;
   for item in items:
-
+    print str(start - 120 + counter)
+    counter = counter + 1
     productName = item.find("div", class_="plp-image-bg").find('a').get('data-productname');
 
     hasMultile = item.find("div", class_="jcarousel");
@@ -129,17 +133,11 @@ while True:
 
       addProduct(productName, productCode, productCode+'-'+colorId,productImage,deepLink,processedtags)
     else:
-      print item
-      print '-----'
-      print item.find('ul')
       print '-----'
       possibleProducts = item.find('ul').find_all('li');
       print 'possible products'
-      print possibleProducts
       for permutation in possibleProducts:
         img =  permutation.find('img')
-        print 'img'
-        print img
         productImage = img.get('data-original').replace('sw=60', 'sw=2000');
         deepLink = img.get('data-url')
         productCode = deepLink.split("/")[4];
